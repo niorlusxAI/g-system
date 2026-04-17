@@ -23,7 +23,6 @@
 | my apps | App builds & prototypes |
 | streamlit | Streamlit dashboards |
 | Bookmarks | Saved references |
-| Narelle | Rental tenant docs |
 | AI GF app | AI companion app |
 | Ndis candice mark | NDIS client management |
 | LLM Research | AI model research |
@@ -45,7 +44,6 @@
 | Perplexity Max Prompt Vault | Prompt storage vault |
 | Superpower Skill | Skills dashboard |
 | Perplexity Computer Hub | Computer agent hub |
-| Victoria Rental Agreement (x5 versions) | Rental agreement apps |
 | KeyForAgents Outreach Command Center | Outreach & lead gen dashboard |
 
 ### Documents & Files
@@ -55,9 +53,6 @@
 | DirtNav UHD Elite Deploy Guide | README |
 | Project Task Dashboard | Excel |
 | MAG7 CapEx FCF Work Adapted | Excel |
-| Victoria Rental Agreement Draft (multiple) | Document |
-| Prefilled Victoria Form1 Rental Agreement (v1-v4) | Document |
-| Vic Rental Agreement 37 Waranga Drive | Document |
 | God's Eye Rug Integration Guide | Document |
 | Master Automation Map | Document |
 | PCS Termux Full Code | Document |
@@ -95,7 +90,7 @@ g-system/
 │   ├── dirtnav/            # DirtNav offroad apps
 │   ├── promptforge/        # PromptForge Studio
 │   ├── trackforge/         # TrackForge music studio
-│   └── rental/             # Victoria rental agreement tools
+│  
 ├── automation/
 │   ├── pcs/                # Perplexity Computer System daemon
 │   ├── gods-eye/           # God's Eye Rug security module

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DirtNav Offroad</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: system-ui; background: #0d1117; color: #c9d1d9; }
+    .nav { background: #161b22; padding: 16px; display: flex; justify-content: space-between; }
+    .nav h1 { color: #58a6ff; }
+    .map { width: 100%; height: 60vh; background: #1a2332; display: flex; align-items: center; justify-content: center; }
+    .controls { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; padding: 16px; }
+    .btn { background: #21262d; border: 1px solid #30363d; color: #58a6ff; padding: 14px; border-radius: 8px; text-align: center; }
+    .status { background: #161b22; padding: 12px; display: flex; justify-content: space-between; color: #484f58; }
+  </style>
+</head>
+<body>
+  <div class="nav"><h1>DirtNav Offroad</h1><span style="color:#58a6ff">Satellite</span></div>
+  <div class="map"><div><h2>Map View</h2><p>Supabase + Mapbox</p><p>Congupna VIC</p></div></div>
+  <div class="controls">
+    <div class="btn">Satellite</div><div class="btn">Terrain</div><div class="btn">UHD</div>
+    <div class="btn">Waypoints</div><div class="btn">Track Log</div><div class="btn">Weather</div>
+  </div>
+  <div class="status"><span>GPS: Active</span><span>0 km/h</span><span>114m</span></div>
+</body>
+</html>

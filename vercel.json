@@ -1,5 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/", "destination": "/apps/keyforagents/index.html" }
-  ]
-}

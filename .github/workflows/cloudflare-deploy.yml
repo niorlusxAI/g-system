@@ -1,0 +1,55 @@
+name: Deploy Cloudflare Workers
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'workers/**'
+      - 'd1/**'
+      - 'kv/**'
+      - 'r2/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Wrangler
+        run: npm install -g wrangler
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Deploy Workers
+        run: |
+          cd workers
+          for dir in */; do
+            if [ -f "${dir}wrangler.json" ]; then
+              cd "${dir}"
+              wrangler deploy
+              cd ..
+            fi
+          done
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Run D1 migrations
+        run: |
+          cd d1
+          for db in */; do
+            if [ -f "${db}migrations/*.sql" ]; then
+              wrangler d1 migrations apply --remote ${db%/}
+            fi
+          done
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

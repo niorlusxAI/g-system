@@ -27,10 +27,17 @@ Add these 6 required secrets:
 
 Go to: https://dash.cloudflare.com > Workers > keyforagents-ai-assistant > Settings > Variables
 
-Add these 2 KV namespace bindings:
+Add these 4 KV namespace bindings:
 
-1. Variable Name: ANALYTICS_KV, KV Namespace: keyforagents-analytics (ID: 6c8418ff250d46509acc6e08898a8a0d)
-2. Variable Name: LEADS_KV, KV Namespace: keyforagents-leads (ID: 1d726ca5dd45439ebb6293500d7c66bc)
+1. Variable Name: API_KEYS_KV, KV Namespace: keyforagents-api-keys (Create new namespace for API key storage)
+2. Variable Name: USAGE_KV, KV Namespace: keyforagents-usage (Create new namespace for usage tracking)
+3. Variable Name: ANALYTICS_KV, KV Namespace: keyforagents-analytics (ID: 6c8418ff250d46509acc6e08898a8a0d)
+4. Variable Name: LEADS_KV, KV Namespace: keyforagents-leads (ID: 1d726ca5dd45439ebb6293500d7c66bc)
+
+**Important:** You need to create the API_KEYS_KV and USAGE_KV namespaces first:
+- Go to Cloudflare Dashboard > Workers > KV > Create namespace
+- Name: keyforagents-api-keys (for API key authentication)
+- Name: keyforagents-usage (for rate limiting and usage tracking)
 
 ### Step 3: Set Up Stripe Webhook
 
@@ -45,7 +52,26 @@ Go to: https://dashboard.stripe.com/test/webhooks
 ## TEST EVERYTHING
 
 ### Test Cloudflare Worker
+```bash
+# Health check
 curl https://keyforagents-ai-assistant.YOUR_SUBDOMAIN.workers.dev/api/health
+
+# Get pricing information
+curl https://keyforagents-ai-assistant.YOUR_SUBDOMAIN.workers.dev/api/pricing
+
+# Get Stripe products
+curl https://keyforagents-ai-assistant.YOUR_SUBDOMAIN.workers.dev/api/stripe/products
+
+# Test chat endpoint (requires valid API key)
+curl -X POST https://keyforagents-ai-assistant.YOUR_SUBDOMAIN.workers.dev/api/chat \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "Hello"}]}'
+
+# Check usage statistics (requires valid API key)
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  https://keyforagents-ai-assistant.YOUR_SUBDOMAIN.workers.dev/api/usage
+```
 
 ### Test Payment Links (click in browser)
 - Basic Plan: https://buy.stripe.com/4gM9AV3s4drBgPvfF41Fe0n
@@ -75,10 +101,72 @@ Check: https://github.com/niorlusxAI/g-system/actions
 Your GitHub Actions workflows will automatically deploy Workers when you push to main.
 
 ### Manual Deployment
+```bash
 npm install -g wrangler
 wrangler login
 cd workers/keyforagents-ai-assistant
 wrangler deploy
+```
+
+## DNS ROUTING SETUP
+
+To route traffic to api.keyforagents.com through Cloudflare:
+
+### Step 1: Update Domain Nameservers
+1. Log into your Domain Registrar (GoDaddy, Namecheap, Google Domains, etc.)
+2. Locate the "DNS Management" or "Nameservers" section
+3. Select "Custom Nameservers" and replace with:
+   - Primary: ns1.cloudflare.com
+   - Secondary: ns2.cloudflare.com
+4. Save changes (propagation takes 15 minutes to a few hours)
+
+### Step 2: Configure Custom Domain in Cloudflare
+1. Go to Cloudflare Dashboard > Workers > keyforagents-ai-assistant
+2. Click **Triggers** > **Custom Domains**
+3. Add: api.keyforagents.com
+4. Wait for SSL certificate provisioning (usually instant)
+
+### Step 3: Verify DNS Propagation
+```bash
+# Check DNS resolution
+dig api.keyforagents.com
+
+# Test the API through custom domain
+curl https://api.keyforagents.com/api/health
+```
+
+**Note:** Once DNS is configured, update the `routes` section in `wrangler.json` to include your custom domain.
+
+## API KEY MANAGEMENT & RATE LIMITING
+
+### Tier Limits
+- **Free**: 1,000 calls/month
+- **Starter**: 10,000 calls/month ($29)
+- **Pro**: 50,000 calls/month ($99)
+- **Enterprise**: 250,000 calls/month ($299)
+- **Pay-as-you-go**: $0.005 per additional call
+
+### Managing API Keys
+Store API keys in the API_KEYS_KV namespace with this structure:
+```json
+{
+  "customerId": "cus_123abc",
+  "tier": "pro",
+  "email": "user@example.com",
+  "createdAt": "2024-01-01T00:00:00Z",
+  "stripeSubscriptionId": "sub_123abc"
+}
+```
+
+### Usage Tracking
+The USAGE_KV namespace tracks monthly usage with keys like:
+- `usage:cus_123abc:2024-01` (January 2024 usage for customer cus_123abc)
+
+### Rate Limit Headers
+All authenticated responses include:
+- `X-RateLimit-Limit`: Monthly limit
+- `X-RateLimit-Remaining`: Calls remaining
+- `X-RateLimit-Reset`: Reset date (first of next month)
 
 ## MAKING MONEY
 
@@ -88,7 +176,7 @@ wrangler deploy
 - 1,000 customers: $44,983.00/month
 
 ### Conversion Flow
-Visitor > Payment Link > Stripe Checkout > Webhook > KV/Leads Storage > You Get Paid
+Visitor > Payment Link > Stripe Checkout > Webhook > KV/Leads Storage > API Key Generation > You Get Paid
 
 ## TROUBLESHOOTING
 

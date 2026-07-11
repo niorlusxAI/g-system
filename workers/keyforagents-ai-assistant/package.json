@@ -1,0 +1,25 @@
+{
+  "name": "keyforagents-ai-assistant",
+  "version": "1.0.0",
+  "description": "KeyForAgents AI Assistant - Monetized Cloudflare Worker with API Key Authentication and Rate Limiting",
+  "main": "worker.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "types": "wrangler types"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "ai",
+    "api",
+    "monetization",
+    "stripe"
+  ],
+  "author": "KeyForAgents",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

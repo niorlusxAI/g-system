@@ -1,0 +1,55 @@
+{
+  "name": "keyforagents-ai-assistant",
+  "main": "worker.js",
+  "compatibility_date": "2024-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  
+  "kv_namespaces": [
+    {
+      "binding": "API_KEYS_KV",
+      "id": "YOUR_API_KEYS_KV_NAMESPACE_ID",
+      "preview_id": "YOUR_API_KEYS_KV_PREVIEW_NAMESPACE_ID"
+    },
+    {
+      "binding": "USAGE_KV",
+      "id": "YOUR_USAGE_KV_NAMESPACE_ID",
+      "preview_id": "YOUR_USAGE_KV_PREVIEW_NAMESPACE_ID"
+    },
+    {
+      "binding": "ANALYTICS_KV",
+      "id": "6c8418ff250d46509acc6e08898a8a0d",
+      "preview_id": "6c8418ff250d46509acc6e08898a8a0d"
+    },
+    {
+      "binding": "LEADS_KV",
+      "id": "1d726ca5dd45439ebb6293500d7c66bc",
+      "preview_id": "1d726ca5dd45439ebb6293500d7c66bc"
+    }
+  ],
+  
+  "vars": {
+    "STRIPE_SECRET_KEY": "@STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET": "@STRIPE_WEBHOOK_SECRET",
+    "ENVIRONMENT": "production"
+  },
+  
+  "triggers": {
+    "crons": []
+  },
+  
+  "routes": [
+    "api.keyforagents.com/*"
+  ],
+  
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "retention": "30"
+    },
+    "metrics": {
+      "enabled": true,
+      "retention": "30"
+    }
+  }
+}

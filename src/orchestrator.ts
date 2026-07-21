@@ -16,14 +16,38 @@
  * variables documented in SETUP.md. Configure via Vercel/GitHub secrets.
  */
 
-import { spawn } from "node:child_process";
+declare const require: {
+  (id: string): any;
+  main?: unknown;
+};
+declare const module: { exports: unknown };
+declare const process: {
+  env: Record<string, string | undefined>;
+  exit(code?: number): never;
+};
+declare const Buffer: {
+  new (data: string): { toString(): string };
+};
+
+interface SpawnHandle {
+  stdout: { on(event: "data", listener: (data: { toString(): string }) => void): void };
+  stderr: { on(event: "data", listener: (data: { toString(): string }) => void): void };
+  stdin: { write(data: string): void; end(): void };
+  on(event: "close", listener: (code: number | null) => void): void;
+}
+
+const { spawn } = require("node:child_process") as {
+  spawn: (command: string, args: string[], options?: Record<string, unknown>) => SpawnHandle;
+};
 
 type JobType =
   | "domain.acquire"
   | "domain.dns.sync"
   | "deploy.vercel"
   | "health.check"
-  | "skill.invoke";
+  | "skill.invoke"
+  | "brainstorm.generate"
+  | "approval.require";
 
 interface Job {
   id: string;
@@ -129,6 +153,49 @@ async function healthCheck(url: string): Promise<ProviderResult> {
   }
 }
 
+function requireApproval(payload: Record<string, unknown>): ProviderResult {
+  const approved = payload.approved === true || payload.approval_status === "approved";
+  const approvalId = payload.approval_id;
+  if (!approved) {
+    return { ok: false, error: "approval_required", retryable: false };
+  }
+  if (approvalId !== undefined && !String(approvalId).trim()) {
+    return { ok: false, error: "approval_required", retryable: false };
+  }
+  return { ok: true, data: { stage: "approval", approved: true } };
+}
+
+function brainstormIdeas(topic: string, domain: string): ProviderResult {
+  const topicLabel = topic || "operational innovation";
+  const domainLabel = domain || "general";
+  const ideas = [
+    {
+      name: `${domainLabel} research companion`,
+      description: `Summarize evidence for ${topicLabel} and flag weak claims before execution.`,
+    },
+    {
+      name: `${topicLabel} story-driven memory assistant`,
+      description: `Persist narrative context for ${domainLabel} workflows and retrieve the right memory at the right time.`,
+    },
+    {
+      name: `${topicLabel} scenario simulation sandbox`,
+      description: `Model launches, incidents, or product experiments in ${domainLabel} before action.`,
+    },
+  ];
+
+  return {
+    ok: true,
+    data: {
+      stage: "brainstorm",
+      topic,
+      domain,
+      ideas,
+      requiresApproval: true,
+      nextStep: "approval.require",
+    },
+  };
+}
+
 // ---------- Polyglot Skill Adapter ----------
 // Invoke any language via subprocess with JSON stdin/stdout.
 // skills/<name>.{py,sh,js,go-bin} — orchestrator auto-detects by extension.
@@ -142,9 +209,9 @@ function invokeSkill(name: string, input: unknown): Promise<ProviderResult> {
     const pick = candidates[0]; // simple default; real impl would stat files
     const proc = spawn(pick.cmd, pick.args, { stdio: ["pipe", "pipe", "pipe"] });
     let out = "", err = "";
-    proc.stdout.on("data", (d) => (out += d.toString()));
-    proc.stderr.on("data", (d) => (err += d.toString()));
-    proc.on("close", (code) => {
+    proc.stdout.on("data", (d: { toString(): string }) => (out += d.toString()));
+    proc.stderr.on("data", (d: { toString(): string }) => (err += d.toString()));
+    proc.on("close", (code: number | null) => {
       if (code === 0) {
         try { resolve({ ok: true, data: JSON.parse(out) }); }
         catch { resolve({ ok: true, data: out }); }
@@ -205,8 +272,18 @@ async function dispatch(job: Job): Promise<ProviderResult> {
       );
     case "health.check":
       return healthCheck(String(job.payload.url));
-    case "skill.invoke":
+    case "brainstorm.generate":
+      return brainstormIdeas(
+        String(job.payload.topic ?? "operational innovation"),
+        String(job.payload.domain ?? "general"),
+      );
+    case "approval.require":
+      return requireApproval(job.payload as Record<string, unknown>);
+    case "skill.invoke": {
+      const approval = requireApproval(job.payload as Record<string, unknown>);
+      if (!approval.ok) return approval;
       return invokeSkill(String(job.payload.name), job.payload.input);
+    }
     default:
       return { ok: false, error: "unknown_job_type" };
   }

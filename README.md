@@ -116,6 +116,11 @@ cp .env.example .env
 # Fill in your API keys
 ```
 
+## New workflow additions
+
+- `docs/ops-runbook.md` documents the brainstorm/approval workflow, agent roles, rollout stages, rollback, and incident response.
+- `automation/pcs/freelance_dashboard.py` provides a safe local dashboard for tracking freelance opportunities and earnings without scraping or mass-applying.
+
 ---
 
 ## License
